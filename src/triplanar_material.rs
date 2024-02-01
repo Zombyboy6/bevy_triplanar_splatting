@@ -65,6 +65,8 @@ pub struct TriplanarMaterial {
     #[reflect(ignore)]
     pub cull_mode: Option<Face>,
 
+    pub fog_enabled: bool,
+
     pub unlit: bool,
 
     pub alpha_mode: AlphaMode,
@@ -94,6 +96,7 @@ impl Default for TriplanarMaterial {
             alpha_mode: AlphaMode::Opaque,
             depth_bias: 0.0,
             uv_scale: 1.0,
+            fog_enabled: true,
         }
     }
 }
@@ -188,6 +191,9 @@ impl AsBindGroupShaderType<TriplanarMaterialUniform> for TriplanarMaterial {
         }
         if self.double_sided {
             flags |= StandardMaterialFlags::DOUBLE_SIDED;
+        }
+        if self.fog_enabled {
+            flags |= StandardMaterialFlags::FOG_ENABLED;
         }
         if self.unlit {
             flags |= StandardMaterialFlags::UNLIT;
