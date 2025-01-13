@@ -1,14 +1,14 @@
 use bevy::{
     pbr::{MaterialPipeline, MaterialPipelineKey, StandardMaterialFlags},
     prelude::*,
-    reflect::TypeUuid,
     render::{
-        mesh::{MeshVertexAttribute, MeshVertexBufferLayout},
+        mesh::{MeshVertexAttribute, MeshVertexBufferLayoutRef},
         render_asset::RenderAssets,
         render_resource::{
             AsBindGroup, AsBindGroupShaderType, Face, RenderPipelineDescriptor, ShaderRef,
             ShaderType, SpecializedMeshPipelineError, TextureFormat, VertexFormat,
         },
+        texture::GpuImage,
     },
 };
 
@@ -21,8 +21,8 @@ use bevy::{
 /// attribute and give all textures dimension `"2d_array"`. Up to 4 layers are
 /// supported by the shader. Material weights are encoded as 4 `u8` numbers that
 /// get packed into a `u32`.
-#[derive(AsBindGroup, Asset, Reflect, Debug, Clone, TypeUuid)]
-#[uuid = "2f3d7f74-4bf7-4f32-98cd-858edafa5ca2"]
+#[derive(AsBindGroup, Asset, Reflect, Debug, Clone)]
+#[type_path = "bevy_triplanar_splatting::triplanar_material::TriplanarMaterial"]
 #[bind_group_data(TriplanarMaterialKey)]
 #[uniform(0, TriplanarMaterialUniform)]
 #[reflect(Default, Debug)]
@@ -79,7 +79,7 @@ pub struct TriplanarMaterial {
 impl Default for TriplanarMaterial {
     fn default() -> Self {
         Self {
-            base_color: Color::rgb(1.0, 1.0, 1.0),
+            base_color: Color::srgb(1.0, 1.0, 1.0),
             base_color_texture: None,
             emissive: Color::BLACK,
             emissive_texture: None,
@@ -103,19 +103,19 @@ impl Default for TriplanarMaterial {
 
 impl Material for TriplanarMaterial {
     fn vertex_shader() -> ShaderRef {
-        "shaders/triplanar_material_vert.wgsl".into()
+        "embedded://bevy_triplanar_splatting/shaders/triplanar_material_vert.wgsl".into()
     }
     fn fragment_shader() -> ShaderRef {
-        "shaders/triplanar_material_frag.wgsl".into()
+        "embedded://bevy_triplanar_splatting/shaders/triplanar_material_frag.wgsl".into()
     }
 
     fn specialize(
         _pipeline: &MaterialPipeline<Self>,
         descriptor: &mut RenderPipelineDescriptor,
-        layout: &MeshVertexBufferLayout,
+        layout: &MeshVertexBufferLayoutRef,
         key: MaterialPipelineKey<Self>,
     ) -> Result<(), SpecializedMeshPipelineError> {
-        let vertex_layout = layout.get_layout(&[
+        let vertex_layout = layout.0.get_layout(&[
             Mesh::ATTRIBUTE_POSITION.at_shader_location(0),
             Mesh::ATTRIBUTE_NORMAL.at_shader_location(1),
             ATTRIBUTE_MATERIAL_WEIGHTS.at_shader_location(2),
@@ -175,7 +175,10 @@ pub struct TriplanarMaterialUniform {
 }
 
 impl AsBindGroupShaderType<TriplanarMaterialUniform> for TriplanarMaterial {
-    fn as_bind_group_shader_type(&self, images: &RenderAssets<Image>) -> TriplanarMaterialUniform {
+    fn as_bind_group_shader_type(
+        &self,
+        images: &RenderAssets<GpuImage>,
+    ) -> TriplanarMaterialUniform {
         let mut flags = StandardMaterialFlags::NONE;
         if self.base_color_texture.is_some() {
             flags |= StandardMaterialFlags::BASE_COLOR_TEXTURE;
@@ -228,11 +231,14 @@ impl AsBindGroupShaderType<TriplanarMaterialUniform> for TriplanarMaterial {
             AlphaMode::Premultiplied => flags |= StandardMaterialFlags::ALPHA_MODE_PREMULTIPLIED,
             AlphaMode::Add => flags |= StandardMaterialFlags::ALPHA_MODE_ADD,
             AlphaMode::Multiply => flags |= StandardMaterialFlags::ALPHA_MODE_MULTIPLY,
+            AlphaMode::AlphaToCoverage => {
+                flags |= StandardMaterialFlags::ALPHA_MODE_ALPHA_TO_COVERAGE
+            }
         }
 
         TriplanarMaterialUniform {
-            base_color: self.base_color.as_linear_rgba_f32().into(),
-            emissive: self.emissive.into(),
+            base_color: self.base_color.to_linear().to_vec4(),
+            emissive: self.emissive.to_srgba().to_vec4(),
             roughness: self.perceptual_roughness,
             metallic: self.metallic,
             reflectance: self.reflectance,
