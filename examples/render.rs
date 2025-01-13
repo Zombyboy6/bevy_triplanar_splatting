@@ -1,10 +1,8 @@
 use bevy::{
     // pbr::wireframe::{WireframeConfig, WireframePlugin},
+    image::{ImageAddressMode, ImageFilterMode, ImageSampler, ImageSamplerDescriptor},
     prelude::*,
-    render::{
-        renderer::RenderDevice,
-        texture::{ImageAddressMode, ImageFilterMode, ImageSampler, ImageSamplerDescriptor},
-    },
+    render::renderer::RenderDevice,
 };
 use bevy_triplanar_splatting::{
     triplanar_material::{TriplanarMaterial, ATTRIBUTE_MATERIAL_WEIGHTS},
@@ -40,10 +38,10 @@ fn setup(
     // start loading materials
     // TODO: automatically choose textures based on GPU supported features
     commands.insert_resource(MaterialHandles {
-        base_color: LoadingImage::new(asset_server.load("array_material/albedo.ktx2")),
-        occlusion: LoadingImage::new(asset_server.load("array_material/ao.ktx2")),
-        normal_map: LoadingImage::new(asset_server.load("array_material/normal.ktx2")),
-        metal_rough: LoadingImage::new(asset_server.load("array_material/metal_rough.ktx2")),
+        base_color: LoadingImage::new(asset_server.load("array_material/albedo.basis")),
+        occlusion: LoadingImage::new(asset_server.load("array_material/ao.basis")),
+        normal_map: LoadingImage::new(asset_server.load("array_material/normal.basis")),
+        metal_rough: LoadingImage::new(asset_server.load("array_material/metal_rough.basis")),
         spawned: false,
     });
     // commands.insert_resource(MaterialHandles {
@@ -62,18 +60,15 @@ fn setup(
     // Spawn lights and camera.
     commands.spawn((
         MovingLight,
-        PointLightBundle {
-            point_light: PointLight {
-                intensity: 50000.,
-                range: 100.,
-                ..default()
-            },
+        PointLight {
+            intensity: 50000.,
+            range: 100.,
             ..default()
         },
     ));
 
     commands
-        .spawn(Camera3dBundle::default())
+        .spawn(Camera3d::default())
         .insert(FpsCameraBundle::new(
             FpsCameraController {
                 translate_sensitivity: 8.0,
@@ -89,7 +84,7 @@ fn setup(
 struct MovingLight;
 
 fn move_lights(time: Res<Time>, mut lights: Query<(&MovingLight, &mut Transform)>) {
-    let t = time.elapsed_seconds();
+    let t = time.elapsed_secs();
     for (_, mut tfm) in lights.iter_mut() {
         tfm.translation = 15.0 * Vec3::new(t.cos(), 1.0, t.sin());
     }
@@ -202,9 +197,9 @@ fn spawn_meshes(
         .collect();
     sphere_mesh.insert_attribute(ATTRIBUTE_MATERIAL_WEIGHTS, material_weights);
 
-    commands.spawn(MaterialMeshBundle {
-        mesh: meshes.add(sphere_mesh),
-        material: materials.add(TriplanarMaterial {
+    commands.spawn((
+        Mesh3d(meshes.add(sphere_mesh)),
+        MeshMaterial3d(materials.add(TriplanarMaterial {
             metallic: 0.05,
             perceptual_roughness: 0.9,
 
@@ -216,9 +211,8 @@ fn spawn_meshes(
 
             uv_scale: 1.0,
             ..default()
-        }),
-        ..default()
-    });
+        })),
+    ));
 }
 
 /// Linear transformation from domain `[-1.0, 1.0]` into range `[0.0, 1.0]`.
