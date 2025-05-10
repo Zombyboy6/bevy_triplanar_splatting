@@ -1,9 +1,10 @@
 use crate::triplanar_material::TriplanarMaterial;
-use bevy::asset::{embedded_asset, load_internal_asset};
+use bevy::asset::{embedded_asset, load_internal_asset, weak_handle};
 use bevy::prelude::*;
 
-const TRIPLANAR_SHADER_HANDLE: Handle<Shader> = Handle::weak_from_u128(2631398565563939187);
-const BIPLANAR_SHADER_HANDLE: Handle<Shader> = Handle::weak_from_u128(1945949403120376729);
+const TRIPLANAR_SHADER_HANDLE: Handle<Shader> =
+    weak_handle!("0196ba23-57d7-7691-8cdd-49257195c511");
+const BIPLANAR_SHADER_HANDLE: Handle<Shader> = weak_handle!("6439bf52-280e-427c-b5ea-a6de1137a57d");
 
 pub struct TriplanarMaterialPlugin;
 

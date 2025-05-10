@@ -48,7 +48,7 @@ pub struct TriplanarMaterial {
     pub metallic_roughness_texture: Option<Handle<Image>>,
 
     #[doc(alias = "specular_intensity")]
-    pub reflectance: f32,
+    pub reflectance: Vec3,
 
     #[texture(9, dimension = "2d_array")]
     #[sampler(10)]
@@ -86,7 +86,11 @@ impl Default for TriplanarMaterial {
             perceptual_roughness: 0.089,
             metallic: 0.01,
             metallic_roughness_texture: None,
-            reflectance: 0.5,
+            reflectance: Vec3 {
+                x: 0.5,
+                y: 0.5,
+                z: 0.5,
+            },
             occlusion_texture: None,
             normal_map_texture: None,
             flip_normal_map_y: false,
@@ -168,7 +172,7 @@ pub struct TriplanarMaterialUniform {
     pub emissive: Vec4,
     pub roughness: f32,
     pub metallic: f32,
-    pub reflectance: f32,
+    pub reflectance: Vec3,
     pub flags: u32,
     pub alpha_cutoff: f32,
     pub uv_scale: f32,

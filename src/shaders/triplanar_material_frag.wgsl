@@ -30,7 +30,7 @@ struct TriplanarMaterial {
     emissive: vec4<f32>,
     perceptual_roughness: f32,
     metallic: f32,
-    reflectance: f32,
+    reflectance: vec3<f32>,
     flags: u32,
     alpha_cutoff: f32,
     uv_scale: f32,
@@ -197,9 +197,9 @@ fn fragment(
     }
 
     // fog
-    if (fog.mode != FOG_MODE_OFF && (material.flags & pbr_types::STANDARD_MATERIAL_FLAGS_FOG_ENABLED_BIT) != 0u) {
-        output_color = pbr_functions::apply_fog(fog, output_color, in.world_position.xyz, view.world_position.xyz);
-    }
+    //if (fog.mode != FOG_MODE_OFF && (material.flags & pbr_types::STANDARD_MATERIAL_FLAGS_FOG_ENABLED_BIT) != 0u) {
+    //    output_color = pbr_functions::apply_fog(fog, output_color, in.world_position.xyz, view.world_position.xyz);
+    //}
 
 #ifdef TONEMAP_IN_SHADER
     output_color = tone_mapping(output_color, view.color_grading);
@@ -218,4 +218,3 @@ fn fragment(
 #endif
     return output_color;
 }
-

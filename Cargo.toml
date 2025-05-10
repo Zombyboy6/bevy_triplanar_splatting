@@ -1,15 +1,15 @@
 [package]
 name = "bevy_triplanar_splatting"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-thiserror = "1"
+thiserror = "2"
 
 [dependencies.bevy]
-version = "0.15"
+version = "0.16"
 default-features = false
 features = [
     "bevy_asset",
@@ -23,8 +23,8 @@ features = [
 ]
 
 [dev-dependencies]
-smooth-bevy-cameras = "0.13.0"
-bevy = "0.15"
+smooth-bevy-cameras = "0.14.0"
+bevy = "0.16"
 
 [[example]]
 name = "render"
